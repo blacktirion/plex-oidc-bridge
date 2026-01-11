@@ -2,6 +2,14 @@
 
 A lightweight OIDC (OpenID Connect) Provider that uses Plex for authentication. Designed specifically to bridge Plex users into identity flows like **Cloudflare Access**, **Tailscale**, or any other OIDC-compatible client.
 
+## IMPORTANT DISCLAIMERS
+1. This project is not affiliated with Plex, Inc. or Cloudflare, Inc. in any way. Use at your own risk. This software is provided "as is", without warranty of any kind.
+2. This software is an **AUTHENTICATION** provider only. It does not provide authorization or user management features. You are responsible for configuring your identity platform to manage access control. This software is an easy way to capture Plex identities and use them in your existing OIDC flows. If you are unsure of the differences between authentication and authorization, please research those topics before using this software.
+3. You should have a basic understanding of OIDC, OAuth2, and Plex authentication flows to use this software effectively.
+4. Always run this software behind HTTPS (e.g., Cloudflare Tunnel, nginx reverse proxy with TLS, etc.) to protect user credentials and tokens.
+5. Review the source code before use to ensure it meets your security requirements. Additionally, this software is for personal or homelab use only and should not be used in production or enterprise environments. It may lack the security features and compliance required for such use cases.
+
+
 ## Features
 
 - **Plex Authentication**: Users sign in via the standard Plex OAuth PIN flow.
