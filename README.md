@@ -21,6 +21,8 @@ go build -o plex-bridge .
 # Set your external URL (important for OIDC redirects)
 export PUBLIC_URL="http://localhost:8080"
 export ENABLE_TEST_ENDPOINTS="true"
+export ALLOWED_REDIRECT_URIS="http://localhost:8080/test/callback"
+export TRUST_PROXY_HEADERS="true"
 
 # Start the bridge
 ./plex-bridge
@@ -42,6 +44,7 @@ docker run -d \
   -p 8080:8080 \
   -e PUBLIC_URL="https://auth.example.com" \
   -e ALLOWED_REDIRECT_URIS="https://example.com/callback,https://another.com/redirect" \
+  -e TRUST_PROXY_HEADERS="true" \
   -v ./config:/app/config \
   --name plex-bridge \
   plex-oidc-bridge
@@ -61,6 +64,7 @@ services:
       - PUBLIC_URL=https://auth.example.com
       - PORT=8080
       - ALLOWED_REDIRECT_URIS=https://example.com/callback,https://another.com/redirect
+      - TRUST_PROXY_HEADERS=true
     restart: unless-stopped
 ```
 
@@ -97,11 +101,11 @@ Your OIDC endpoints are:
 | `PORT` | Env (Optional) | `8080` | The internal port the bridge listens on. |
 | `ENABLE_TEST_ENDPOINTS` | Env (Optional) | `false` | Set to `"true"` to enable the `/test` debugging endpoints. |
 | `ALLOWED_REDIRECT_URIS` | Env (Required) | *(none)* | Comma-separated whitelist of allowed `redirect_uri` values (must be `https`). If not set, authorization requests are rejected. |
+| `TRUST_PROXY_HEADERS` | Env (Optional) | `false` | Set to `"true"` only if running behind a trusted reverse proxy (Cloudflare Tunnel, nginx, etc.). When enabled, rate limiting uses `X-Forwarded-For` and `X-Real-IP` headers instead of direct connection IP. |
 | `SESSION_TTL_MINUTES` | Env (Optional) | `10` | TTL for Plex/OIDC session (PIN) state before it expires. |
 | `AUTH_CODE_TTL_MINUTES` | Env (Optional) | `10` | TTL for issued authorization codes before they expire. |
 | `OIDC_CLIENT_ID` | Env (Optional) | Generated | If set, forces the specific Client ID. If not set, one is generated and saved to `/app/config/clients.json`. |
 | `OIDC_CLIENT_SECRET` | Env (Optional) | Generated | If set, forces the specific Client Secret. |
-| `TRUST_PROXY_HEADERS` | Env (Optional) | `false` | Set to `"true"` only if running behind a trusted reverse proxy (Cloudflare Tunnel, nginx, etc.). When enabled, rate limiting uses `X-Forwarded-For` and `X-Real-IP` headers instead of direct connection IP. |
 
 ### Persistence
 The bridge stores generated keys and configuration in `/app/config`. You should mount this volume to persist your RSA signing keys and Client credentials.

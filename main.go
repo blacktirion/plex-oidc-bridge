@@ -133,7 +133,7 @@ func main() {
 	authCodeTTL = loadTTL("AUTH_CODE_TTL_MINUTES", 10)
 
 	// 4. Trust proxy headers if explicitly enabled
-	trustProxyHeaders = strings.EqualFold(os.Getenv("TRUST_PROXY_HEADERS"), "true")
+	trustProxyHeaders = strings.EqualFold(normalizeInputString(os.Getenv("TRUST_PROXY_HEADERS")), "true")
 	if trustProxyHeaders {
 		log.Println("TRUST_PROXY_HEADERS enabled: respecting X-Forwarded-For and X-Real-IP")
 	}
@@ -149,7 +149,7 @@ func main() {
 	http.HandleFunc("/callback", handleCallback)   // Plex Callback
 
 	// Test Handlers - Only enabled if env var is set
-	if os.Getenv("ENABLE_TEST_ENDPOINTS") == "true" {
+	if strings.EqualFold(normalizeInputString(os.Getenv("ENABLE_TEST_ENDPOINTS")), "true") {
 		log.Println("Enabling /test endpoints for debugging.")
 		http.HandleFunc("/test", handleTestLogin)
 		http.HandleFunc("/test/callback", handleTestCallback)
@@ -268,8 +268,8 @@ func initConfig(dir string) error {
 	path := fmt.Sprintf("%s/clients.json", dir)
 
 	// Load from Env if present
-	envID := os.Getenv("OIDC_CLIENT_ID")
-	envSecret := os.Getenv("OIDC_CLIENT_SECRET")
+	envID := normalizeInputString(os.Getenv("OIDC_CLIENT_ID"))
+	envSecret := normalizeInputString(os.Getenv("OIDC_CLIENT_SECRET"))
 	envRedirects := parseRedirects(os.Getenv("ALLOWED_REDIRECT_URIS"))
 
 	// Try to load file
@@ -339,6 +339,10 @@ func cleanRedirectList(list []string) []string {
 
 func normalizeRedirect(uri string) string {
 	return strings.Trim(uri, " \t\r\n\"'`“”‘’")
+}
+
+func normalizeInputString(val string) string {
+	return strings.Trim(val, " \t\r\n\"'`“”‘’")
 }
 
 func canonicalizeRedirect(uri string) (string, bool) {
@@ -535,7 +539,7 @@ func handleAuthorize(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 1. Parse OIDC parameters
-	oidcClientID := r.URL.Query().Get("client_id")
+	oidcClientID := normalizeInputString(r.URL.Query().Get("client_id"))
 	redirectURI := r.URL.Query().Get("redirect_uri")
 	state := r.URL.Query().Get("state")
 	nonce := r.URL.Query().Get("nonce")
@@ -651,6 +655,8 @@ func handleToken(w http.ResponseWriter, r *http.Request) {
 		clientID = r.FormValue("client_id")
 		clientSecret = r.FormValue("client_secret")
 	}
+	clientID = normalizeInputString(clientID)
+	clientSecret = normalizeInputString(clientSecret)
 
 	if clientID != globalConfig.ClientID || !secretsEqual(clientSecret, globalConfig.ClientSecret) {
 		log.Printf("/token reject client creds mismatch: got_id=%s expected_id=%s got_secret_set=%t", sanitizeForLog(clientID, 64), sanitizeForLog(globalConfig.ClientID, 64), clientSecret != "")
